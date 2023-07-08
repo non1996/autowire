@@ -114,6 +114,7 @@ func GetComponent[T any](ctx *AppContext, require ...bool) T {
 }
 
 func GetComponentByAlias[T any](ctx *AppContext, name string, require ...bool) T {
+	// TODO
 	return function.Zero[T]()
 }
 
