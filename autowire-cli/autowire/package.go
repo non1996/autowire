@@ -77,7 +77,7 @@ func parsePackage(
 		if !ok {
 			continue
 		}
-		annos = append(annos, annotation.Parse("anno", genDecl)...)
+		annos = append(annos, annotation.Parse("a", genDecl)...)
 	}
 
 	for _, anno := range annos {

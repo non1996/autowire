@@ -1,6 +1,6 @@
 module github.com/non1996/go-autowire
 
-go 1.21
+go 1.18
 
 require golang.org/x/tools v0.9.3
 
