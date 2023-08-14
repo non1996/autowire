@@ -45,7 +45,7 @@ type Bean[T any] struct {
 	Method any
 }
 
-type PropertyProvider struct {
+type PropertyProvider[P any] struct {
 	Field string
 	Scope string
 }

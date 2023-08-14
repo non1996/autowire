@@ -71,10 +71,10 @@ autowire.BeanFactory[{{$.Type.NameComplete}}, {{$bean.Type.NameComplete}}]{
 },
 {{end}}
 {{range $property := $.Properties}}
-autowire.PropertyFactory[{{$.Type.NameComplete}}]{
+autowire.PropertyFactory[{{$.Type.NameComplete}}, {{$property.Type.NameComplete}}]{
 	Scope: "{{$property.Scope}}",
 	ComponentName: "{{$.Alias}}",
-	BuildFunc: func(comp {{$.Type.NameComplete}}) any {
+	BuildFunc: func(comp {{$.Type.NameComplete}}) {{$property.Type.NameComplete}} {
 		return comp.{{$property.Field}}
 	},
 },

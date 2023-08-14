@@ -42,6 +42,7 @@ type PostConstruct struct {
 }
 
 type PropertyProvider struct {
+	Type  Type
 	Scope string
 	Field string
 }
