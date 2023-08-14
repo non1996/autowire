@@ -5,7 +5,6 @@ import (
 	"reflect"
 
 	"github.com/modern-go/reflect2"
-	"github.com/non1996/go-jsonobj/constraint"
 	util "github.com/non1996/go-jsonobj/utils"
 )
 
@@ -54,97 +53,10 @@ func (p *properties) get(scope, key string) (any, bool) {
 	return value, exist
 }
 
-func valueAsInt[I constraint.Int | constraint.Uint](v any) I {
-	value := reflect.ValueOf(v)
-
-	switch value.Type().Kind() {
-	case reflect.Int,
-		reflect.Int8,
-		reflect.Int16,
-		reflect.Int32,
-		reflect.Int64:
-		return I(value.Int())
-	case reflect.Uint,
-		reflect.Uint8,
-		reflect.Uint16,
-		reflect.Uint32,
-		reflect.Uint64:
-		return I(value.Uint())
-	case reflect.Float32,
-		reflect.Float64:
-		return I(value.Float())
-	default:
-		panic("")
-	}
-}
-
-func valueAsFloat[F constraint.Float](v any) F {
-	value := reflect.ValueOf(v)
-
-	switch value.Type().Kind() {
-	case reflect.Int,
-		reflect.Int8,
-		reflect.Int16,
-		reflect.Int32,
-		reflect.Int64:
-		return F(value.Int())
-	case reflect.Uint,
-		reflect.Uint8,
-		reflect.Uint16,
-		reflect.Uint32,
-		reflect.Uint64:
-		return F(value.Uint())
-	case reflect.Float32,
-		reflect.Float64:
-		return F(value.Float())
-	default:
-		panic("")
-	}
-}
-
-func valueAsBool[B constraint.Bool](v any) B {
-	value := reflect.ValueOf(v)
-
-	switch value.Type().Kind() {
-	case reflect.Bool:
-		return B(value.Bool())
-	default:
-		panic("")
-	}
-}
-
-func valueAsString[S constraint.String](v any) S {
-	value := reflect.ValueOf(v)
-	switch value.Type().Kind() {
-	case reflect.String:
-		return S(value.String())
-	default:
-		panic("")
-	}
-}
-
-func valueAsSlice[S ~[]E, E any](v any) S {
-	value := reflect.ValueOf(v)
-
-	switch value.Type().Kind() {
-	case reflect.Slice, reflect.Array:
-		elemType1 := value.Type().Elem()
-		elemType2 := TypeOf[E]()
-
-		if elemType1 != elemType2 {
-			panic("")
-		}
-
-		return S(value.Interface().([]E))
-	default:
-		panic("")
-	}
-}
-
 func objToKvPairs(obj any) (res []util.Pair[string, any]) {
 	v := deRefValue(reflect.ValueOf(obj))
 	if v.Kind() != reflect.Struct {
-		panic("invalid object")
+		return nil
 	}
 
 	return objToKvImpl("", v)

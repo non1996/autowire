@@ -94,9 +94,9 @@ func parsePackage(
 
 	pkg.Imports.Add(Import{
 		Alias:       "autowire",
-		PackagePath: "github.com/non1996/autowire/autowire",
+		PackagePath: "github.com/non1996/go-autowire/autowire",
 	})
-	pkg.Imports.Map.Remove("github.com/non1996/autowire/anno")
+	pkg.Imports.Map.Remove("github.com/non1996/go-autowire/a")
 
 	for _, app := range pkg.Applications {
 		for _, configuration := range app.Configurations {

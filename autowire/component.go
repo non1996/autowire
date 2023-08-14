@@ -1,6 +1,7 @@
 package autowire
 
 import (
+	"github.com/non1996/go-jsonobj/container"
 	"github.com/non1996/go-jsonobj/stream"
 )
 
@@ -27,6 +28,10 @@ func newComponents() components {
 
 // 注册工厂对象
 func (c *components) add(f Factory) {
+	if container.MapContainsKey(c.nameIndex, f.name()) {
+		panic(errComponentDuplicate(f.name()))
+	}
+
 	c.list = append(c.list, &component{factory: f})
 
 	idx := len(c.list) - 1
@@ -57,12 +62,4 @@ func (c *components) listByTypeName(typeName string) []*component {
 	idxes := c.typeIndex[typeName]
 
 	return stream.Map(idxes, func(idx int) *component { return c.list[idx] })
-}
-
-func getInstance[T any](ctx *AppContext, component *component) T {
-	if component.instance == nil {
-		component.instance = component.factory.build(ctx)
-	}
-
-	return cast[T](component.instance)
 }

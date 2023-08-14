@@ -1,9 +1,5 @@
 package autowire
 
-import (
-	"os"
-)
-
 // Injector 注入器
 // 注意：不管组件是以值类型注册还是以指针类型注册，泛型参数 C 都是组件的值类型
 type Injector[C any] interface {
@@ -43,7 +39,7 @@ type ValueInjector[C any] struct {
 func (i ValueInjector[C]) inject(ctx *AppContext, comp *C) {
 	value, exist := ctx.properties.get(i.Scope, i.Key)
 	if !exist && i.Required {
-		panic("")
+		panic(errValueNotFound(i.Scope, i.Key))
 	}
 
 	i.InjectFn(comp, value)
@@ -58,14 +54,6 @@ type EnvInjector[C any] struct {
 }
 
 func (i EnvInjector[C]) inject(ctx *AppContext, comp *C) {
-	ev, exist := os.LookupEnv(i.Key)
-	if !exist && i.Required {
-		panic("")
-	}
-
-	if i.DefaultValue != "" {
-		i.InjectFn(comp, i.DefaultValue)
-	}
-
+	ev := ctx.environmentVariables.get(i.Key, i.DefaultValue, i.Required)
 	i.InjectFn(comp, ev)
 }

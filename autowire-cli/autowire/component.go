@@ -17,7 +17,7 @@ type Component struct {
 	Injectors       []Injector
 	PostConstruct   *PostConstruct
 	Beans           []Bean
-	Configs         []ConfigProvider
+	Properties      []PropertyProvider
 }
 
 func (c *Component) AddInjector(injector Injector) {
@@ -41,10 +41,10 @@ type PostConstruct struct {
 	FuncName string
 }
 
-type ConfigProvider struct {
-	Type
-	Field string
+type PropertyProvider struct {
+	Type  Type
 	Scope string
+	Field string
 }
 
 func parseComponent(rootModule, relativePath string, annotation annotation.PrimaryAnnotation) (c *Component) {

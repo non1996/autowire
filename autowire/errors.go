@@ -15,3 +15,11 @@ func errComponentNotFound(typeName string) error {
 func errComponentDuplicate(name string) error {
 	return fmt.Errorf("instance [%s] is duplicate", name)
 }
+
+func errValueNotFound(scope string, key string) error {
+	return fmt.Errorf("property [%s/%s] not found", scope, key)
+}
+
+func errEnvNotFound(name string) error {
+	return fmt.Errorf("env [%s] not found", name)
+}

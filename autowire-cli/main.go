@@ -8,9 +8,9 @@ func main() {
 	autowire.GenerateAll(
 		autowire.Config{
 			Module:           "github.com/non1996/example",
-			Root:             "/Users/bytedance/goproj/autowire/example",
+			Root:             "/Users/bytedance/goproj/any_test",
 			AutowireFileName: "autowire.go",
 			GenFileName:      "autowire_gen.go",
 		},
-		"/Users/bytedance/goproj/autowire/example")
+		"/Users/bytedance/goproj/any_test/autowire-example")
 }

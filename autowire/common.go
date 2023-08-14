@@ -3,12 +3,15 @@ package autowire
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/modern-go/reflect2"
+	"github.com/non1996/go-jsonobj/function"
 )
 
 type Type = reflect.Type
 
 // TypeOf 获取反射类型
-func TypeOf[T any]() reflect.Type {
+func TypeOf[T any]() Type {
 	return reflect.TypeOf((*T)(nil)).Elem()
 }
 
@@ -17,7 +20,7 @@ func getTypeName[T any]() string {
 }
 
 // 如果是指针类型，持续解引用，直到得到底层值类型
-func getTypeNameT(typ reflect.Type) string {
+func getTypeNameT(typ Type) string {
 	for typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
@@ -31,4 +34,22 @@ func getTypeNameT(typ reflect.Type) string {
 
 func SetValue[T any](receiver *T, v any) {
 	reflect.ValueOf(receiver).Elem().Set(reflect.ValueOf(v))
+}
+
+func required(r []bool) bool {
+	return len(r) == 0 || r[0]
+}
+
+func cast[T any](v any) T {
+	if reflect2.IsNil(v) {
+		return function.Zero[T]()
+	}
+
+	v2, ok := v.(T)
+	if !ok {
+		panic(fmt.Errorf("type cast failed, source type [%T] destination type [%s] are not compatible",
+			v, getTypeName[T]()))
+	}
+
+	return v2
 }

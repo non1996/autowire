@@ -11,9 +11,3 @@ func Assert(cond bool, msg ...string) {
 		panic(fmt.Errorf("assert failed, %s", container.SliceGetFirst(msg)))
 	}
 }
-
-func AssertFunc(cond func() bool, msg ...any) {
-	if !cond() {
-		panic(fmt.Errorf("assert failed, %s", container.SliceGetFirst(msg)))
-	}
-}

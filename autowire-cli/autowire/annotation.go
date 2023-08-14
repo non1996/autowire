@@ -91,7 +91,7 @@ func parseAnnoConfigurations(app *Application, a annotation.SecondaryAnnotation)
 }
 
 func parseAnnoConfig(component *Component, a annotation.SecondaryAnnotation) {
-	component.Configs = append(component.Configs, ConfigProvider{
+	component.Properties = append(component.Properties, PropertyProvider{
 		Field: a.GetStringParam("Field"),
 		Scope: a.GetStringParam("Scope"),
 	})

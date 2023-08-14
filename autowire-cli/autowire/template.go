@@ -59,18 +59,6 @@ autowire.ComponentFactory[{{$.Type.NameWithPkg}}]{
 	{{if $.PostConstruct -}}
 	PostConstruct: {{if $.PostConstruct.IsMethod}}(*{{$.Type.NameWithPkg}}).{{$.PostConstruct.FuncName}}{{else}}{{$.PostConstruct.FuncName}}{{end}},
 	{{end}}
-	{{if $.Configs -}}
-	Configs: []autowire.ConfigProvider[{{$.Type.NameWithPkg}}]{
-		{{range $conf := $.Configs}}
-		{
-			Scope: "{{$conf.Scope}}",
-			Provider: func(c *{{$.Type.NameWithPkg}}) any {
-				return c.{{$conf.Field}}	
-			},			
-		},
-		{{end}}
-	},
-	{{end}}
 },
 {{if $.IsConfiguration}}
 {{range $bean := $.Beans}}
@@ -79,6 +67,15 @@ autowire.BeanFactory[{{$.Type.NameComplete}}, {{$bean.Type.NameComplete}}]{
 	ComponentName: "{{$.Alias}}",
 	BuildFunc: func(comp {{$.Type.NameComplete}}) {{$bean.Type.NameComplete}} {
 		return comp.{{$bean.Method}}()			
+	},
+},
+{{end}}
+{{range $property := $.Properties}}
+autowire.PropertyFactory[{{$.Type.NameComplete}}, {{$property.Type.NameComplete}}]{
+	Scope: "{{$property.Scope}}",
+	ComponentName: "{{$.Alias}}",
+	BuildFunc: func(comp {{$.Type.NameComplete}}) {{$property.Type.NameComplete}} {
+		return comp.{{$property.Field}}
 	},
 },
 {{end}}
