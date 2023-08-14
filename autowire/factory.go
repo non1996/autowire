@@ -143,7 +143,14 @@ func (f PropertyFactory[C, P]) condition() *Condition {
 	return nil
 }
 
-func (f PropertyFactory[C, P]) onRegister(_ *AppContext) {
+func (f PropertyFactory[C, P]) onRegister(ctx *AppContext) {
+	ctx.properties.add(propertyProvider{
+		scope: f.Scope,
+		provide: func() any {
+			prop := ctx.getComponentByName(f.name())
+			return prop
+		},
+	})
 }
 
 func (f PropertyFactory[C, P]) build(ctx *AppContext) any {
