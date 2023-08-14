@@ -13,7 +13,7 @@ type Implement[_ any] struct{}
 
 type Primary struct{}
 
-type ConditionalOnConfig struct {
+type ConditionalOnProperty struct {
 	Scope string
 	Key   string
 	Value string

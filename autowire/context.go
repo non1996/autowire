@@ -1,5 +1,9 @@
 package autowire
 
+import (
+	"fmt"
+)
+
 type AppContext struct {
 	components           components
 	properties           properties
@@ -80,10 +84,7 @@ func (ctx *AppContext) match(cond *Condition) bool {
 		return false
 	}
 
-	s, ok := v.(string)
-	if !ok {
-		return false
-	}
+	s := fmt.Sprintf("%+v", v)
 	return exist && cond.Value == s
 }
 

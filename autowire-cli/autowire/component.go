@@ -42,7 +42,6 @@ type PostConstruct struct {
 }
 
 type PropertyProvider struct {
-	Type  Type
 	Scope string
 	Field string
 }
@@ -73,16 +72,16 @@ func parseComponent(rootModule, relativePath string, annotation annotation.Prima
 }
 
 var componentAnnoParser = map[string]func(*Component, annotation.SecondaryAnnotation){
-	"Alias":               parseAnnoAlias,
-	"ValueType":           parseAnnoValueType,
-	"Implement":           parseAnnoImplement,
-	"Configuration":       parseAnnoConfiguration,
-	"Primary":             parseAnnoPrimary,
-	"ConditionalOnConfig": parseAnnoCondition,
-	"Autowired":           parseAnnoAutowired,
-	"Value":               parseAnnoValue,
-	"Env":                 parseAnnoEnv,
-	"PostConstruct":       parseAnnoPostConstruct,
-	"Bean":                parseAnnoBean,
-	"Config":              parseAnnoConfig,
+	"Alias":                 parseAnnoAlias,
+	"ValueType":             parseAnnoValueType,
+	"Implement":             parseAnnoImplement,
+	"Configuration":         parseAnnoConfiguration,
+	"Primary":               parseAnnoPrimary,
+	"ConditionalOnProperty": parseAnnoProperty,
+	"Autowired":             parseAnnoAutowired,
+	"Value":                 parseAnnoValue,
+	"Env":                   parseAnnoEnv,
+	"PostConstruct":         parseAnnoPostConstruct,
+	"Bean":                  parseAnnoBean,
+	"PropertyProvider":      parseAnnoPropertyProvider,
 }

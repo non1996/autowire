@@ -34,7 +34,7 @@ func parseAnnoPrimary(component *Component, _ annotation.SecondaryAnnotation) {
 	component.Primary = true
 }
 
-func parseAnnoCondition(component *Component, a annotation.SecondaryAnnotation) {
+func parseAnnoProperty(component *Component, a annotation.SecondaryAnnotation) {
 	component.Condition = &Condition{
 		Scope: a.GetStringParam("Scope"),
 		Key:   a.GetStringParam("Key"),
@@ -90,7 +90,7 @@ func parseAnnoConfigurations(app *Application, a annotation.SecondaryAnnotation)
 		})
 }
 
-func parseAnnoConfig(component *Component, a annotation.SecondaryAnnotation) {
+func parseAnnoPropertyProvider(component *Component, a annotation.SecondaryAnnotation) {
 	component.Properties = append(component.Properties, PropertyProvider{
 		Field: a.GetStringParam("Field"),
 		Scope: a.GetStringParam("Scope"),
