@@ -7,7 +7,7 @@ import (
 	"github.com/non1996/go-jsonobj/function"
 )
 
-type ConstructFunc[C any] func(*C) error
+type ConstructFunc[C any] func(*C)
 
 type Condition struct {
 	Scope string
@@ -61,6 +61,8 @@ func (f ComponentFactory[C]) onRegister(_ *AppContext) {
 }
 
 func (f ComponentFactory[C]) build(ctx *AppContext) any {
+	log.Info("[ComponentFactory %s] building", f.Name)
+
 	comp := new(C)
 
 	// 依赖注入
@@ -70,10 +72,8 @@ func (f ComponentFactory[C]) build(ctx *AppContext) any {
 
 	// 执行后置操作
 	if f.PostConstruct != nil {
-		err := f.PostConstruct(comp)
-		if err != nil {
-			panic(err)
-		}
+		log.Debug("[Component %s] post construct", f.Name)
+		f.PostConstruct(comp)
 	}
 
 	return function.Ternary[any](f.Ptr, comp, *comp)
@@ -82,7 +82,7 @@ func (f ComponentFactory[C]) build(ctx *AppContext) any {
 type BeanFactory[C any, B any] struct {
 	Name          string
 	ComponentName string
-	BuildFunc     func(C) B
+	BuildFunc     func(*C) B
 }
 
 func (f BeanFactory[C, B]) name() string {
@@ -113,14 +113,16 @@ func (f BeanFactory[C, B]) onRegister(_ *AppContext) {
 }
 
 func (f BeanFactory[C, B]) build(ctx *AppContext) any {
-	comp := GetComponentByName[C](ctx, f.ComponentName)
-	return f.BuildFunc(comp)
+	log.Info("[BeanFactory %s] building", f.Name)
+
+	c := ctx.getComponentByName(f.ComponentName)
+	return f.BuildFunc(castToPtr[C](c))
 }
 
 type PropertyFactory[C, P any] struct {
 	Scope         string
 	ComponentName string
-	BuildFunc     func(C) P
+	BuildFunc     func(*C) P
 }
 
 func (f PropertyFactory[C, P]) name() string {
@@ -155,18 +157,26 @@ func (f PropertyFactory[C, P]) onRegister(ctx *AppContext) {
 
 func (f PropertyFactory[C, P]) build(ctx *AppContext) any {
 	comp := ctx.getComponentByName(f.ComponentName)
-	return f.BuildFunc(cast[C](comp))
+	return f.BuildFunc(castToPtr[C](comp))
 }
 
 type ApplicationFactory[A any] struct {
 	Factory
-	App       *A
-	Injectors []Injector[A]
+	App           *A
+	Injectors     []Injector[A]
+	PostConstruct ConstructFunc[A]
 }
 
 func (a ApplicationFactory[A]) build(ctx *AppContext) any {
+	log.Info("[ApplicationFactory] building")
+
 	for _, fieldInjector := range a.Injectors {
 		fieldInjector.inject(ctx, a.App)
+	}
+
+	if a.PostConstruct != nil {
+		log.Debug("[ApplicationFactory] post construct")
+		a.PostConstruct(a.App)
 	}
 
 	return a.App

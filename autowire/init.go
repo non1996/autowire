@@ -1,6 +1,9 @@
 package autowire
 
-var defaultAppContext = NewAppContext()
+var (
+	defaultAppContext            = NewAppContext()
+	log               LogHandler = defaultLogHandler{}
+)
 
 func Context() *AppContext {
 	return defaultAppContext
@@ -22,4 +25,8 @@ func Register(factories ...Factory) any {
 		factory.onRegister(defaultAppContext)
 	}
 	return nil
+}
+
+func SetLog(handler LogHandler) {
+	log = handler
 }

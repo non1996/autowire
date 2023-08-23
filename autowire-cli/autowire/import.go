@@ -2,33 +2,44 @@ package autowire
 
 import (
 	"go/ast"
-	"go/token"
 	"strings"
 
 	"github.com/non1996/go-jsonobj/container"
-
-	"github.com/non1996/go-autowire/autowire-cli/internal/assert"
 )
 
-// Imports pkg -> import
 type Imports struct {
-	Map      *container.OrderedMap[string, Import]
-	AliasMap map[string]Import
+	Map      *container.OrderedMap[string, *Import] // pkg -> import
+	AliasMap map[string]string                      // alias -> pkg
 }
 
-func (i *Imports) List() (res []Import) {
-	i.Map.Foreach(func(s string, i Import) {
+func NewImports() *Imports {
+	return &Imports{
+		Map:      container.NewOrderedMap[string, *Import](),
+		AliasMap: map[string]string{},
+	}
+}
+
+func (i *Imports) List() (res []*Import) {
+	i.Map.Foreach(func(s string, i *Import) {
 		res = append(res, i)
 	})
 
 	return res
 }
 
-func (i *Imports) Add(imp Import) {
+func (i *Imports) Add(imp *Import) {
 	i.Map.Add(imp.PackagePath, imp)
 	if imp.Alias != "_" && imp.Alias != "" && imp.Alias != "." {
-		i.AliasMap[imp.Alias] = imp
+		i.AliasMap[imp.Alias] = imp.PackagePath
 	}
+}
+
+func (i *Imports) AddIfAbsent(imp *Import) {
+	if i.Map.Exist(imp.PackagePath) {
+		return
+	}
+
+	i.Add(imp)
 }
 
 func (i *Imports) RemoveByPath(path string) {
@@ -42,35 +53,63 @@ func (i *Imports) RemoveByPath(path string) {
 	}
 }
 
-type Import struct {
-	Alias       string
-	PackagePath string
-	HasAlias    bool
-}
-
-func parseImport(decl *ast.GenDecl) Imports {
-	assert.Assert(decl.Tok == token.IMPORT)
-
-	imports := Imports{
-		Map:      container.NewOrderedMap[string, Import](),
-		AliasMap: map[string]Import{},
+func (i *Imports) GetByAlias(alias string) *Import {
+	path, exist := i.AliasMap[alias]
+	if !exist {
+		return nil
 	}
 
-	for _, spec := range decl.Specs {
-		importSpec := spec.(*ast.ImportSpec)
+	return i.Map.Get(path)
+}
 
+func (i *Imports) GetByPath(path string) *Import {
+	return i.Map.Get(path)
+}
+
+func (i *Imports) Merge(imports *Imports) {
+	for _, imp := range imports.List() {
+		if i.Map.Exist(imp.PackagePath) {
+			continue
+		}
+
+		alias := imp.Alias
+		for container.MapExist(i.AliasMap, alias) {
+			alias = alias + "_"
+		}
+
+		i.Add(&Import{
+			Alias:         alias,
+			PackagePath:   imp.PackagePath,
+			ExplicitAlias: imp.ExplicitAlias || alias != imp.Alias,
+		})
+	}
+}
+
+type Import struct {
+	Alias         string
+	PackagePath   string
+	ExplicitAlias bool
+}
+
+func parseImport(specs []*ast.ImportSpec) *Imports {
+	imports := &Imports{
+		Map:      container.NewOrderedMap[string, *Import](),
+		AliasMap: map[string]string{},
+	}
+
+	for _, spec := range specs {
 		i := Import{}
 
-		i.PackagePath = mustStringLit(importSpec.Path)
+		i.PackagePath = mustStringLit(spec.Path)
 
-		if importSpec.Name != nil {
-			i.Alias = importSpec.Name.Name
-			i.HasAlias = true
+		if spec.Name != nil {
+			i.Alias = spec.Name.Name
+			i.ExplicitAlias = true
 		} else {
 			i.Alias = i.PackagePath[strings.LastIndex(i.PackagePath, "/")+1:]
 		}
 
-		imports.Add(i)
+		imports.Add(&i)
 	}
 
 	return imports

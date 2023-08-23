@@ -3,6 +3,7 @@ package autowire
 import (
 	"fmt"
 	"go/ast"
+	"path/filepath"
 
 	"github.com/non1996/go-jsonobj/stream"
 
@@ -10,20 +11,53 @@ import (
 	"github.com/non1996/go-autowire/autowire-cli/internal/assert"
 )
 
+func (p *Package) parseAnnoFile() {
+	astFile := p.ast.Files[filepath.Join(p.AbsolutePath, p.AutowireFileName)]
+	if astFile == nil {
+		return
+	}
+
+	imports := parseImport(astFile.Imports)
+	i := imports.GetByPath("github.com/non1996/go-autowire/a")
+	if i == nil {
+		return
+	}
+
+	p.AnnoFile = &AnnoFile{Package: p}
+
+	for _, decl := range astFile.Decls {
+		genDecl, ok := decl.(*ast.GenDecl)
+		if !ok {
+			continue
+		}
+
+		p.AnnoFile.Annotations = append(p.AnnoFile.Annotations, annotation.Parse(i.Alias, genDecl)...)
+	}
+}
+
+func parseAnnoComponentScans(app *Application, a annotation.SecondaryAnnotation) {
+	app.ComponentScan = stream.Map(a.GetParam("Value").(*ast.CompositeLit).Elts,
+		func(t1 ast.Expr) string {
+			return mustStringLit(t1)
+		})
+}
+
 func parseAnnoAlias(component *Component, a annotation.SecondaryAnnotation) {
 	component.Alias = a.GetStringParam("Value")
 }
 
 func parseAnnoValueType(component *Component, _ annotation.SecondaryAnnotation) {
-	component.Type.Ptr = false
+	component.Ptr = false
 }
 
 func parseAnnoImplement(component *Component, a annotation.SecondaryAnnotation) {
 	assert.Assert(len(a.Generics) == 1, "annotation <Implement> should has only one generic type")
 
-	implType := a.Generics[0]
+	implType := component.NewType(a.Generics[0])
 
-	component.Implements = append(component.Implements, parseType(implType))
+	assert.Assert(implType.notPointer(), "annotation <Implement> should not have pointer generic type")
+
+	component.Implements = append(component.Implements, implType)
 }
 
 func parseAnnoConfiguration(component *Component, _ annotation.SecondaryAnnotation) {
@@ -34,26 +68,23 @@ func parseAnnoPrimary(component *Component, _ annotation.SecondaryAnnotation) {
 	component.Primary = true
 }
 
-func parseAnnoProperty(component *Component, a annotation.SecondaryAnnotation) {
+func parseAnnoConditionalOnProperty(component *Component, a annotation.SecondaryAnnotation) {
 	component.Condition = &Condition{
+		Value: a.GetStringParam("Value"),
 		Scope: a.GetStringParam("Scope"),
 		Key:   a.GetStringParam("Key"),
-		Value: a.GetStringParam("Value"),
 	}
 }
 
 func parseAnnoAutowired(component *Component, a annotation.SecondaryAnnotation) {
-	assert.Assert(len(a.Generics) == 1)
-
-	component.AddInjector(ComponentInjector{
+	component.AddInjector(&ComponentInjector{
 		BaseInjector: parseBaseInjector(component, a),
-		Type:         parseType(a.Generics[0]),
 		Qualifier:    a.GetStringParam("Qualifier", ""),
 	})
 }
 
 func parseAnnoValue(component *Component, a annotation.SecondaryAnnotation) {
-	component.AddInjector(ValueInjector{
+	component.AddInjector(&ValueInjector{
 		BaseInjector: parseBaseInjector(component, a),
 		Scope:        a.GetStringParam("Scope"),
 		Key:          a.GetStringParam("Key"),
@@ -61,7 +92,7 @@ func parseAnnoValue(component *Component, a annotation.SecondaryAnnotation) {
 }
 
 func parseAnnoEnv(component *Component, a annotation.SecondaryAnnotation) {
-	component.Injectors = append(component.Injectors, EnvInjector{
+	component.AddInjector(&EnvInjector{
 		BaseInjector: parseBaseInjector(component, a),
 		Key:          a.GetStringParam("Key"),
 		Default:      a.GetStringParam("Default", ""),
@@ -70,39 +101,29 @@ func parseAnnoEnv(component *Component, a annotation.SecondaryAnnotation) {
 
 func parseAnnoPostConstruct(component *Component, a annotation.SecondaryAnnotation) {
 	component.PostConstruct = &PostConstruct{
-		IsMethod: true,
-		FuncName: a.GetStringParam("Value"),
+		MethodName: a.GetStringParam("Value"),
 	}
 }
 
 func parseAnnoBean(component *Component, a annotation.SecondaryAnnotation) {
-	component.Beans = append(component.Beans, Bean{
-		Type:   parseType(a.Generics[0]),
-		Alias:  mustStringLit(a.GetParam("Alias")),
+	component.Beans = append(component.Beans, &Bean{
+		Alias:  a.GetStringParam("Alias", ""),
 		Method: a.GetStringParam("Method"),
 	})
 }
 
-func parseAnnoConfigurations(app *Application, a annotation.SecondaryAnnotation) {
-	app.Configurations = stream.Map(a.GetParam("Value").(*ast.CompositeLit).Elts,
-		func(t1 ast.Expr) string {
-			return mustStringLit(t1)
-		})
-}
-
 func parseAnnoPropertyProvider(component *Component, a annotation.SecondaryAnnotation) {
-	component.Properties = append(component.Properties, PropertyProvider{
-		Type:  parseType(a.Generics[0]),
-		Field: a.GetStringParam("Field"),
+	component.Properties = append(component.Properties, &PropertyProvider{
+		Value: a.GetStringParam("Value"),
 		Scope: a.GetStringParam("Scope"),
 	})
 }
 
 func parseBaseInjector(component *Component, a annotation.SecondaryAnnotation) BaseInjector {
 	return BaseInjector{
-		FieldName: a.GetStringParam("Field"),
-		CompType:  component.Type,
-		Required:  a.GetBoolParam("Required", true),
+		Value:    a.GetStringParam("Value"),
+		CompType: component.Type,
+		Required: a.GetBoolParam("Required", true),
 	}
 }
 

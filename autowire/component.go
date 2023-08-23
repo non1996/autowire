@@ -11,9 +11,17 @@ type component struct {
 	instance any
 }
 
+func (c *component) getInstance(ctx *AppContext) any {
+	if c.instance == nil {
+		c.instance = c.factory.build(ctx)
+	}
+
+	return c.instance
+}
+
 // 组件集合
 type components struct {
-	list           []*component
+	list           []*component     // 组件列表
 	typeIndex      map[string][]int // 类型名 -> 组件下标列表
 	nameIndex      map[string]int   // 组件名称 -> 组件下标
 	configurations []int            // configuration类的下标列表

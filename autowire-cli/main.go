@@ -38,14 +38,13 @@ var app = cli.App{
 				},
 			},
 			Action: func(context *cli.Context) error {
-				autowire.GenerateAll(
+				autowire.Generate(
 					autowire.Config{
 						Module:           context.String("module"),
 						Root:             context.Args().First(),
 						AutowireFileName: context.String("filename"),
 						GenFileName:      context.String("genfilename"),
 					},
-					context.Args().First(),
 				)
 
 				return nil

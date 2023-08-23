@@ -8,6 +8,6 @@ import (
 
 func Assert(cond bool, msg ...string) {
 	if !cond {
-		panic(fmt.Errorf("assert failed, %s", container.SliceGetFirst(msg)))
+		panic(fmt.Errorf("assert failed, %s", container.SliceGetFirstOr(msg, "")))
 	}
 }

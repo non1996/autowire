@@ -2,6 +2,8 @@ package autowire
 
 import (
 	"fmt"
+
+	"github.com/non1996/go-jsonobj/stream"
 )
 
 type AppContext struct {
@@ -19,6 +21,7 @@ func NewAppContext() *AppContext {
 }
 
 func (ctx *AppContext) Inject(appFactory Factory) any {
+	log.Debug("[AppContext] inject start")
 	return appFactory.build(ctx)
 }
 
@@ -30,7 +33,7 @@ func (ctx *AppContext) getComponent(typ Type, require ...bool) any {
 		panic(errComponentNotFound(typeName))
 	}
 	if len(comps) == 1 {
-		return ctx.getInstance(comps[0])
+		return comps[0].getInstance(ctx)
 	}
 
 	var (
@@ -47,11 +50,11 @@ func (ctx *AppContext) getComponent(typ Type, require ...bool) any {
 	}
 
 	if primary != nil {
-		return ctx.getInstance(primary)
+		return primary.getInstance(ctx)
 	}
 
 	if len(otherMatches) == 1 {
-		return ctx.getInstance(otherMatches[0])
+		return otherMatches[0].getInstance(ctx)
 	}
 
 	if len(otherMatches) > 1 {
@@ -71,7 +74,17 @@ func (ctx *AppContext) getComponentByName(name string, require ...bool) any {
 		panic(errComponentNotFound(name))
 	}
 
-	return ctx.getInstance(comp)
+	return comp.getInstance(ctx)
+}
+
+func (ctx *AppContext) listComponent(typ Type) []any {
+	typeName := getTypeNameT(typ)
+
+	comps := ctx.components.listByTypeName(typeName)
+
+	return stream.Map(comps, func(comp *component) any {
+		return comp.getInstance(ctx)
+	})
 }
 
 func (ctx *AppContext) match(cond *Condition) bool {
@@ -86,12 +99,4 @@ func (ctx *AppContext) match(cond *Condition) bool {
 
 	s := fmt.Sprintf("%+v", v)
 	return exist && cond.Value == s
-}
-
-func (ctx *AppContext) getInstance(component *component) any {
-	if component.instance == nil {
-		component.instance = component.factory.build(ctx)
-	}
-
-	return component.instance
 }

@@ -1,8 +1,26 @@
 package autowire
 
 import (
+	"go/token"
 	"text/template"
 )
+
+var genContext GenerateContext
+
+type GenerateContext struct {
+	fSet     *token.FileSet
+	packages []*Package
+}
+
+func (c *GenerateContext) getPackage(absolutePath string) *Package {
+	for _, p := range c.packages {
+		if p.AbsolutePath == absolutePath {
+			return p
+		}
+	}
+
+	return nil
+}
 
 func init() {
 	factoryTemplate = template.Must(template.New("tmplGenFile").Parse(tmplGenFile))

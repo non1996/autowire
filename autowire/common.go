@@ -47,9 +47,28 @@ func cast[T any](v any) T {
 
 	v2, ok := v.(T)
 	if !ok {
-		panic(fmt.Errorf("type cast failed, source type [%T] destination type [%s] are not compatible",
+		panic(fmt.Errorf("cast failed, source type [%T] destination type [%s] are not compatible",
 			v, getTypeName[T]()))
 	}
 
 	return v2
+}
+
+func castToPtr[T any](v any) *T {
+	if reflect2.IsNil(v) {
+		return nil
+	}
+
+	r, ok := v.(*T)
+	if ok {
+		return r
+	}
+
+	r2, ok := v.(T)
+	if ok {
+		return &r2
+	}
+
+	panic(fmt.Errorf("castToPtr failed, source type [%T] destination type [%s] are not compatible",
+		v, getTypeName[T]()))
 }

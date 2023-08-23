@@ -16,6 +16,10 @@ func errComponentDuplicate(name string) error {
 	return fmt.Errorf("instance [%s] is duplicate", name)
 }
 
+func errPropertyScopeDuplicate(name string) error {
+	return fmt.Errorf("")
+}
+
 func errValueNotFound(scope string, key string) error {
 	return fmt.Errorf("property [%s/%s] not found", scope, key)
 }

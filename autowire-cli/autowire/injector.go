@@ -1,13 +1,24 @@
 package autowire
 
+type InjectorKind string
+
+const (
+	InjectorKindComponent InjectorKind = "component"
+	InjectorKindValue     InjectorKind = "value"
+	InjectorKindEnv       InjectorKind = "env"
+)
+
 type Injector interface {
-	Kind() string
+	Base() *BaseInjector
+	Kind() InjectorKind
 }
 
 type BaseInjector struct {
-	FieldName string // 字段名称
-	CompType  Type   // 组件类型
-	Required  bool
+	Value    string // 字段名称/函数名称
+	CompType Type   // 组件类型
+	IsMethod bool   // 是否使用函数进行注入
+	IsSlice  bool   // 是否注入的是一个列表
+	Required bool
 }
 
 type ComponentInjector struct {
@@ -16,8 +27,12 @@ type ComponentInjector struct {
 	Qualifier string
 }
 
-func (i ComponentInjector) Kind() string {
-	return "Component"
+func (i *ComponentInjector) Base() *BaseInjector {
+	return &i.BaseInjector
+}
+
+func (i *ComponentInjector) Kind() InjectorKind {
+	return InjectorKindComponent
 }
 
 type ValueInjector struct {
@@ -26,8 +41,12 @@ type ValueInjector struct {
 	Key   string
 }
 
-func (i ValueInjector) Kind() string {
-	return "Value"
+func (i *ValueInjector) Base() *BaseInjector {
+	return &i.BaseInjector
+}
+
+func (i *ValueInjector) Kind() InjectorKind {
+	return InjectorKindValue
 }
 
 type EnvInjector struct {
@@ -36,6 +55,10 @@ type EnvInjector struct {
 	Default string
 }
 
-func (i EnvInjector) Kind() string {
-	return "Env"
+func (i *EnvInjector) Base() *BaseInjector {
+	return &i.BaseInjector
+}
+
+func (i *EnvInjector) Kind() InjectorKind {
+	return InjectorKindEnv
 }

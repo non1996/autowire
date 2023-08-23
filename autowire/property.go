@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/modern-go/reflect2"
+	"github.com/non1996/go-jsonobj/container"
 	util "github.com/non1996/go-jsonobj/utils"
 )
 
@@ -27,6 +28,9 @@ func newProperties() properties {
 }
 
 func (p *properties) add(provider propertyProvider) {
+	if container.MapContainsKey(p.scopes, provider.scope) {
+		panic(errPropertyScopeDuplicate(provider.scope))
+	}
 	p.scopes[provider.scope] = provider
 }
 
@@ -83,16 +87,12 @@ func objToKvImpl(prefix string, v reflect.Value) (res []util.Pair[string, any]) 
 
 		if fieldValue.Type().Kind() == reflect.Struct {
 			if fieldType.Anonymous {
-				res = append(res, objToKvImpl(joinKey(prefix, fieldValue.Type().Name()), fieldValue)...)
+				res = append(res, objToKvImpl(prefix, fieldValue)...)
 			} else {
 				res = append(res, objToKvImpl(joinKey(prefix, fieldType.Name), fieldValue)...)
 			}
-		} else if validConfigFieldKind(fieldValue.Type().Kind()) {
-			if fieldType.Anonymous {
-				res = append(res, util.NewPair(joinKey(prefix, fieldValue.Type().Name()), fieldValue.Interface()))
-			} else {
-				res = append(res, util.NewPair(joinKey(prefix, fieldType.Name), fieldValue.Interface()))
-			}
+		} else if isValidPropertyKind(fieldValue.Type().Kind()) {
+			res = append(res, util.NewPair(joinKey(prefix, fieldType.Name), fieldValue.Interface()))
 		}
 	}
 
@@ -114,9 +114,9 @@ func deRefValue(v reflect.Value) reflect.Value {
 	return v
 }
 
-func validConfigFieldKind(kind reflect.Kind) bool {
-	if kind > reflect.Invalid && kind < reflect.Complex64 {
-		return true
-	}
-	return kind == reflect.String || kind == reflect.Slice || kind == reflect.Array
+func isValidPropertyKind(kind reflect.Kind) bool {
+	return (kind > reflect.Invalid && kind < reflect.Complex64) ||
+		kind == reflect.String ||
+		kind == reflect.Slice ||
+		kind == reflect.Array
 }
